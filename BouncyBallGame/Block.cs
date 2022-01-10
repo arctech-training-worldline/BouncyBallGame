@@ -56,5 +56,12 @@ namespace BouncyBallGame
         {
             _gameCanvas.ShowText(_blockText, _point);
         }
+
+        public bool IntersectsX(int x)
+        {
+            return x >= _point.X && x <= Right;
+        }
+
+        private int Right => _point.X + Width;
     }
 }

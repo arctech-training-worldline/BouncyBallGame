@@ -4,23 +4,38 @@ namespace BouncyBallGame
 {
     internal class BouncyBallGame
     {
+        private readonly IGameCanvas _canvas;
+        private Score _score;
         private Ball _ball;
         private Block _block;
-        private readonly IGameCanvas _canvas;
 
         public BouncyBallGame()
         {
             _canvas = new GameCanvas();
+            _score = new Score(_canvas);
             _ball = new Ball(10, 5, _canvas);
+            _ball.BottomBoundaryHit += BallOnBottomBoundaryHit;
             _block = new Block(_canvas);
+        }
+
+        private void BallOnBottomBoundaryHit(object sender, Point point)
+        {
+            if (_block.IntersectsX(point.X))
+                _score++;   // increase points
+            else
+                _score--;   // decrease lives;
+
+            _score.Show();
         }
 
         public void StartGame()
         {
             _canvas.HideCursor();
+            _canvas.DisplayBanner();
 
-            _ball.Clear();
+            _ball.Draw();
             _block.Draw();
+            _score.Show();
 
             bool stopGame;
             do
@@ -30,14 +45,16 @@ namespace BouncyBallGame
                 _ball.Draw();
 
                 stopGame = CheckKeyPressedToStopGame();
-            } while (!stopGame);
+            } while (!stopGame && _score.LivesRemaining);
+
+            _canvas.DisplayGameOver();
 
             _canvas.ShowCursor();
         }
 
         private bool CheckKeyPressedToStopGame()
         {
-            if (!_canvas.GetKeyIfAvailable(out var key)) 
+            if (!_canvas.GetKeyIfAvailable(out var key))
                 return false;
 
             switch (key)
@@ -45,23 +62,15 @@ namespace BouncyBallGame
                 case ConsoleKey.Escape:
                     return true;
                 case ConsoleKey.Add:
-                    //b.IncreaseSpeed(1);
-                    //b = b >> 1;
                     _ball >>= 1;
                     break;
                 case ConsoleKey.Subtract:
-                    //b.DeceaseSpeed(1);
-                    //b = b << 1;
                     _ball <<= 1;
                     break;
                 case ConsoleKey.Multiply:
-                    //b.IncreaseSpeed(1);
-                    //b = b >> 10;
                     _ball >>= 10;
                     break;
                 case ConsoleKey.Divide:
-                    //b.DecreaseSpeed(1);
-                    //b = b << 10;
                     _ball <<= 10;
                     break;
                 case ConsoleKey.RightArrow:

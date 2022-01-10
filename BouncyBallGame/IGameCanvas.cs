@@ -14,5 +14,14 @@ namespace BouncyBallGame
         void ShowCursor();
         void HideCursor();
         bool GetKeyIfAvailable(out ConsoleKey key);
+
+        /// <summary>
+        /// Ascii Graphic art generated at
+        /// http://www.network-science.de/ascii/
+        /// </summary>
+        void DisplayBanner();
+
+        void ClearScreen();
+        void DisplayGameOver();
     }
 }

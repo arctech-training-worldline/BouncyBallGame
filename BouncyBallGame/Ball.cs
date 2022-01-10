@@ -5,6 +5,11 @@ namespace BouncyBallGame
 {
     internal class Ball
     {
+        public event EventHandler<Point> LeftBoundaryHit;
+        public event EventHandler<Point> TopBoundaryHit;
+        public event EventHandler<Point> RightBoundaryHit;
+        public event EventHandler<Point> BottomBoundaryHit;
+
         private readonly IGameCanvas _gameCanvas;
         
         private const int MaxBrakeSpeed = 300;
@@ -51,11 +56,29 @@ namespace BouncyBallGame
             var newX = b.Position.X + _xFactor;
             var newY = b.Position.Y + _yFactor;
 
-            if (newX < 0 || newX > Console.WindowWidth)
+            if (newX < 0)
+            {
                 _xFactor = -_xFactor;
+                b.LeftBoundaryHit?.Invoke(b, b.Position);
+            }
 
-            if (newY < 0 || newY > Console.WindowHeight)
+            if (newX > Console.WindowWidth)
+            {
+                _xFactor = -_xFactor;
+                b.RightBoundaryHit?.Invoke(b, b.Position);
+            }
+
+            if (newY < 0)
+            {
                 _yFactor = -_yFactor;
+                b.TopBoundaryHit?.Invoke(b, b.Position);
+            }
+
+            if (newY > Console.WindowHeight)
+            {
+                _yFactor = -_yFactor;
+                b.BottomBoundaryHit?.Invoke(b, b.Position);
+            }
 
             b.Position.X += _xFactor;
             b.Position.Y += _yFactor;
