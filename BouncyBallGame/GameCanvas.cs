@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json;
 
 namespace BouncyBallGame
 {
@@ -10,13 +9,13 @@ namespace BouncyBallGame
 
         public Point TopRight => new(Console.WindowWidth, 0);
 
-
         public void ShowCharacter(char ch, Point point, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
         {
-            using (new ColorBackup(foregroundColor, backgroundColor))
-            {
-                ShowCharacter(ch, point);
-            }
+            var colorBackup = new ColorBackup(foregroundColor, backgroundColor);
+
+            ShowCharacter(ch, point);
+
+            colorBackup.Revert();
         }
 
         public void ShowCharacter(char ch, Point point)
@@ -27,10 +26,9 @@ namespace BouncyBallGame
 
         public void ShowText(string text, Point point, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
         {
-            using (new ColorBackup(foregroundColor, backgroundColor))
-            {
-                ShowText(text, point);
-            }
+            var colorBackup = new ColorBackup(foregroundColor, backgroundColor);
+            ShowText(text, point);
+            colorBackup.Revert();
         }
 
         public void ShowText(string text, Point point)
@@ -122,17 +120,18 @@ namespace BouncyBallGame
             const ConsoleColor foregroundColor = ConsoleColor.Cyan;
             const ConsoleColor backgroundColor = ConsoleColor.Black;
 
-            using (new ColorBackup(foregroundColor, backgroundColor))
-            {
-                var point = new Point(0, (Height - asciiArtText.Length) / 2);
+            var colorBackup = new ColorBackup(foregroundColor, backgroundColor);
 
-                foreach (var text in asciiArtText)
-                {
-                    point.X = (Width - text.Length) / 2;
-                    ShowText(text, point);
-                    point.Y++;
-                }
+            var point = new Point(0, (Height - asciiArtText.Length) / 2);
+
+            foreach (var text in asciiArtText)
+            {
+                point.X = (Width - text.Length) / 2;
+                ShowText(text, point);
+                point.Y++;
             }
+            
+            colorBackup.Revert();
 
             var key = Console.ReadKey();
             while (key.Key != ConsoleKey.Escape && key.Key != ConsoleKey.Spacebar && key.Key != ConsoleKey.Enter) { }

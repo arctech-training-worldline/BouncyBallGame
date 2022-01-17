@@ -11,6 +11,7 @@ namespace BouncyBallGame
 
         private readonly IGameCanvas _gameCanvas;
         private readonly Point _point;
+        private int Right => _point.X + Width;
 
         public Block(IGameCanvas gameCanvas)
         {
@@ -24,44 +25,38 @@ namespace BouncyBallGame
             _gameCanvas.ShowText(_blockText, _point, ConsoleColor.White, ConsoleColor.DarkRed);
         }
 
-        public static Block operator ++(Block block)
-        {
-            block.Clear();
-
-            if (block._point.X + Speed > block._gameCanvas.Width - Width)
-                block._point.X = block._gameCanvas.Width - Width;
-            else
-                block._point.X += Speed;
-            
-            block.Draw();
-            
-            return block;
-        }
-
-        public static Block operator --(Block block)
-        {
-            block.Clear();
-
-            if (block._point.X - Speed < 0)
-                block._point.X = 0;
-            else
-                block._point.X -= Speed;
-
-            block.Draw();
-
-            return block;
-        }
-
-        private void Clear()
+        private void Hide()
         {
             _gameCanvas.ShowText(_blockText, _point);
+        }
+
+        public void MoveRight()
+        {
+            Hide();
+
+            var newX = _point.X + Speed;
+
+            if (newX > _gameCanvas.Width - Width - 1)
+                _point.X = _gameCanvas.Width - Width - 1;
+            else
+                _point.X = newX;
+            
+            Draw();           
+        }
+
+        public void MoveLeft()
+        {
+            Hide();
+
+            var newY = _point.X - Speed;
+            _point.X = newY < 0 ? 0 : newY;
+
+            Draw();
         }
 
         public bool IntersectsX(int x)
         {
             return x >= _point.X && x <= Right;
         }
-
-        private int Right => _point.X + Width;
     }
 }

@@ -4,19 +4,10 @@ namespace BouncyBallGame
 {
     internal class BouncyBallGame
     {
-        private readonly IGameCanvas _canvas;
+        private IGameCanvas _canvas;
         private Score _score;
         private Ball _ball;
         private Block _block;
-
-        public BouncyBallGame()
-        {
-            _canvas = new GameCanvas();
-            _score = new Score(_canvas);
-            _ball = new Ball(10, 5, _canvas);
-            _ball.BottomBoundaryHit += BallOnBottomBoundaryHit;
-            _block = new Block(_canvas);
-        }
 
         private void BallOnBottomBoundaryHit(object sender, Point point)
         {
@@ -30,25 +21,33 @@ namespace BouncyBallGame
 
         public void StartGame()
         {
+            _canvas = new GameCanvas();
+
             _canvas.HideCursor();
             _canvas.DisplayBanner();
 
-            _ball.Draw();
+            _block = new Block(_canvas);
             _block.Draw();
+
+            _score = new Score(_canvas);
             _score.Show();
 
-            bool stopGame;
-            do
+            using (_ball = new Ball(10, 5, _canvas))
             {
-                _ball.Clear();
-                _ball++;
-                _ball.Draw();
+                _ball.BottomBoundaryHit += BallOnBottomBoundaryHit;
+                _ball.StartBouncing();
 
-                stopGame = CheckKeyPressedToStopGame();
-            } while (!stopGame && _score.LivesRemaining);
+                bool stopGame;
+                do
+                {
+                    stopGame = CheckKeyPressedToStopGame();
+
+                } while (!stopGame && _score.LivesRemaining);
+
+                _ball.StopBouncing();
+            }
 
             _canvas.DisplayGameOver();
-
             _canvas.ShowCursor();
         }
 
@@ -61,23 +60,11 @@ namespace BouncyBallGame
             {
                 case ConsoleKey.Escape:
                     return true;
-                case ConsoleKey.Add:
-                    _ball >>= 1;
-                    break;
-                case ConsoleKey.Subtract:
-                    _ball <<= 1;
-                    break;
-                case ConsoleKey.Multiply:
-                    _ball >>= 10;
-                    break;
-                case ConsoleKey.Divide:
-                    _ball <<= 10;
-                    break;
                 case ConsoleKey.RightArrow:
-                    _block++;
+                    _block.MoveRight();
                     break;
                 case ConsoleKey.LeftArrow:
-                    _block--;
+                    _block.MoveLeft();
                     break;
             }
 

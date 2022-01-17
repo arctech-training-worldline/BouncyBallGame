@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BouncyBallGame
+﻿namespace BouncyBallGame
 {
     internal static class Program
     {

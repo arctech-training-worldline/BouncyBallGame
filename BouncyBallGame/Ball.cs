@@ -3,25 +3,21 @@ using System.Threading;
 
 namespace BouncyBallGame
 {
-    internal class Ball
+    internal class Ball : IDisposable
     {
-        public event EventHandler<Point> LeftBoundaryHit;
-        public event EventHandler<Point> TopBoundaryHit;
-        public event EventHandler<Point> RightBoundaryHit;
         public event EventHandler<Point> BottomBoundaryHit;
-
         private readonly IGameCanvas _gameCanvas;
         
-        private const int MaxBrakeSpeed = 300;
-        //private const char BallCharacter = (char)0x7F;
         private const char BallCharacter = '@';
 
         private static int _xFactor = 3;
         private static int _yFactor = 1;
 
-        private int _speedBrake;
+        private readonly int _speedBrake;
 
         private Point Position { get; }
+
+        private bool _exitThread;
 
         public Ball(int x, int y, IGameCanvas gameCanvas)
         {
@@ -30,67 +26,65 @@ namespace BouncyBallGame
             _speedBrake = 50;
         }
 
-        //public void IncreaseSpeed(int value)
-        public static Ball operator >>(Ball b, int value)
+        internal void StartBouncing()
         {
-            if (b._speedBrake - value <= 0)
-                b._speedBrake = 0;
-            else
-                b._speedBrake -= value;
-            return b;
+            Draw();
+
+            var thread1 = new Thread(DoWork);
+            thread1.Start();
         }
 
-        //public void DecreaseSpeed(int value)
-        public static Ball operator <<(Ball b, int value)
+        internal void StopBouncing()
         {
-            if (b._speedBrake + value > MaxBrakeSpeed)
-                b._speedBrake = MaxBrakeSpeed;
-            else
-                b._speedBrake += value;
-            return b;
+            _exitThread = true;
         }
 
-        //public void MoveBall()
-        public static Ball operator ++(Ball b)
+        private void DoWork()
         {
-            var newX = b.Position.X + _xFactor;
-            var newY = b.Position.Y + _yFactor;
+            do
+            {
+                ShowLogMessage();
+                Thread.Sleep(_speedBrake);
+
+                Hide();
+                Move();
+                Draw();
+            } while (!_exitThread);
+
+            Hide();
+        }
+
+        public void Move()
+        {
+            var newX = Position.X + _xFactor;
+            var newY = Position.Y + _yFactor;
 
             if (newX < 0)
-            {
                 _xFactor = -_xFactor;
-                b.LeftBoundaryHit?.Invoke(b, b.Position);
-            }
 
-            if (newX > Console.WindowWidth)
-            {
+            if (newX >= Console.WindowWidth)
                 _xFactor = -_xFactor;
-                b.RightBoundaryHit?.Invoke(b, b.Position);
-            }
 
             if (newY < 0)
+                _yFactor = -_yFactor;
+
+            if (newY >= Console.WindowHeight)
             {
                 _yFactor = -_yFactor;
-                b.TopBoundaryHit?.Invoke(b, b.Position);
+                BottomBoundaryHit?.Invoke(this, Position);
             }
 
-            if (newY > Console.WindowHeight)
-            {
-                _yFactor = -_yFactor;
-                b.BottomBoundaryHit?.Invoke(b, b.Position);
-            }
-
-            b.Position.X += _xFactor;
-            b.Position.Y += _yFactor;
-
-            return b;
+            Position.X += _xFactor;
+            Position.Y += _yFactor;
         }
-
         public void Draw()
         {
             _gameCanvas.ShowCharacter(BallCharacter, Position, ConsoleColor.White, ConsoleColor.DarkRed);
-            ShowLogMessage();
-            Thread.Sleep(_speedBrake);
+        }
+
+        internal void Hide()
+        {
+            _gameCanvas.ShowCharacter(' ', Position);
         }
 
         private void ShowLogMessage()
@@ -102,9 +96,9 @@ namespace BouncyBallGame
             _gameCanvas.ShowText(text, canvasTopRight);
         }
 
-        internal void Clear()
+        public void Dispose()
         {
-            _gameCanvas.ShowCharacter(' ', Position);
+            StopBouncing();
         }
     }
 }
